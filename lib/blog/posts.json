@@ -1,0 +1,8 @@
+{
+  "collection": {
+    "title": "Blog",
+    "navLabel": "Blog",
+    "basePath": "/blog"
+  },
+  "posts": []
+}
