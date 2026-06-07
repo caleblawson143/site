@@ -6,6 +6,26 @@
   },
   "posts": [
     {
+      "slug": "just-a-test",
+      "title": "Just a test",
+      "excerpt": "excerpt here",
+      "contentHtml": "<p>This is a small test</p>\n",
+      "heroImageUrl": "https://www.tygerauto.com/mm5/graphics/photos/test-sku.jpg",
+      "author": "",
+      "tags": [],
+      "categories": [],
+      "publishAt": "2026-06-07T17:37:43.170Z",
+      "updatedAt": "2026-06-07T17:38:01.361Z",
+      "readingTimeMinutes": 1,
+      "wordCount": 5,
+      "seo": {
+        "metaTitle": "",
+        "metaDescription": "",
+        "canonicalUrl": "",
+        "ogImageUrl": ""
+      }
+    },
+    {
       "slug": "mastering-seo-building-a-website-that-ranks-high",
       "title": "Mastering SEO: Building a Website That Ranks High",
       "excerpt": "Learn the essential steps to build a website with strong SEO foundations. Discover how to optimize your site for search engines and attract more visitors.",
