@@ -4,5 +4,27 @@
     "navLabel": "Blog",
     "basePath": "/blog"
   },
-  "posts": []
+  "posts": [
+    {
+      "slug": "why-your-water-heater-is-making-noise",
+      "title": "Why Your Water Heater Is Making Noise",
+      "excerpt": "Common causes of a noisy water heater and when to call a plumber.",
+      "contentHtml": "<p>If your water heater rumbles or pops, sediment buildup at the bottom of the tank is the most common cause. Flushing the tank annually usually resolves it. If the noise persists or you notice leaking, it is time to call a licensed plumber.</p>\n",
+      "heroImageUrl": null,
+      "author": "",
+      "tags": [],
+      "categories": [],
+      "publishAt": "2026-08-05T17:46:08.052Z",
+      "updatedAt": "2026-08-05T17:46:08.995Z",
+      "readingTimeMinutes": 1,
+      "wordCount": 43,
+      "seo": {
+        "metaTitle": "",
+        "metaDescription": "",
+        "canonicalUrl": "",
+        "ogImageUrl": "",
+        "keywords": []
+      }
+    }
+  ]
 }
