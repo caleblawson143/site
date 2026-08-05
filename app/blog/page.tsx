@@ -1,135 +1,284 @@
-import Image from 'next/image'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
-import { Chatbot } from '@/components/chatbot'
-import { ArrowRight, Calendar } from 'lucide-react'
+import { notFound } from 'next/navigation'
+import Navbar from '@/components/navbar'
+import Footer from '@/components/footer'
+import { BLOG_DATA_URL } from '@/lib/blog/source'
+import { Clock, User, Tag } from 'lucide-react'
 
-export default function BlogPage() {
-  const posts = [
-    {
-      title: 'Safe Drinking Water with a Reverse Osmosis (RO) System',
-      excerpt: 'Learn how reverse osmosis systems can provide your family with clean, safe drinking water by removing contaminants and impurities.',
-      image: 'https://reliantplumbing.com/jjwp/wp-content/uploads/2020/10/RO-System.gif',
-      link: '/reverse-osmosis',
-      date: 'March 15, 2024',
-      category: 'Water Filtration'
+export const metadata: Metadata = {
+  title: 'Plumbing Tips & Advice – Blog',
+  description:
+    'Expert plumbing tips, maintenance guides, and DIY advice from the team at FlowRight Plumbing. Stay informed and keep your home\'s plumbing in top shape.',
+}
+
+interface PostSeo {
+  metaTitle?: string
+  metaDescription?: string
+  canonicalUrl?: string
+  ogImageUrl?: string
+  keywords?: string[]
+}
+
+interface Post {
+  slug: string
+  title: string
+  excerpt: string
+  contentHtml: string
+  heroImageUrl?: string
+  author: string
+  tags: string[]
+  categories: string[]
+  publishAt: string
+  updatedAt?: string
+  readingTimeMinutes: number
+  wordCount?: number
+  seo: PostSeo
+}
+
+interface BlogData {
+  collection?: { title?: string; navLabel?: string; basePath?: string }
+  posts: Post[]
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+async function getBlogData(): Promise<BlogData> {
+  try {
+    const res = await fetch(BLOG_DATA_URL, { cache: 'no-store' })
+    if (!res.ok) return { posts: [] }
+    return res.json()
+  } catch {
+    return { posts: [] }
+  }
+}
+
+export default async function BlogPage() {
+  const data = await getBlogData()
+
+  const now = new Date()
+  const published = (data.posts ?? [])
+    .filter((p) => new Date(p.publishAt) <= now)
+    .sort((a, b) => new Date(b.publishAt).getTime() - new Date(a.publishAt).getTime())
+
+  const [featured, ...rest] = published
+
+  // Collect unique categories across all published posts
+  const allCategories = Array.from(
+    new Set(published.flatMap((p) => p.categories ?? []))
+  ).filter(Boolean)
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: data.collection?.title ?? 'FlowRight Plumbing Blog',
+    url: 'https://flowrightplumbing.com/blog',
+    description: 'Expert plumbing tips, maintenance guides, and DIY advice.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'FlowRight Plumbing',
+      url: 'https://flowrightplumbing.com',
     },
-    {
-      title: '4 Signs You May Need a Water Softener',
-      excerpt: 'Discover the telltale signs of hard water in your home and how a water softener can protect your plumbing and appliances.',
-      image: 'https://reliantplumbing.com/jjwp/wp-content/uploads/2024/07/Descaling-System-Installation.jpg',
-      link: '/water-softener',
-      date: 'February 28, 2024',
-      category: 'Water Treatment'
-    },
-    {
-      title: 'Sewer Maintenance and Repair Tips',
-      excerpt: 'Essential maintenance tips to keep your sewer system functioning properly and avoid costly repairs down the line.',
-      image: 'https://reliantplumbing.com/jjwp/wp-content/uploads/2025/10/Screenshot-2025-10-15-094412.jpg',
-      link: '/sewer-maintenance',
-      date: 'February 10, 2024',
-      category: 'Maintenance'
-    },
-    {
-      title: 'Water Heater Maintenance Tips for San Antonio Homes',
-      excerpt: 'Keep your water heater running efficiently with these expert maintenance tips tailored for San Antonio homeowners.',
-      image: 'https://reliantplumbing.com/jjwp/wp-content/uploads/2018/10/Featured-WH-Images-Website.png',
-      link: '/water-heater',
-      date: 'January 22, 2024',
-      category: 'Water Heaters'
-    }
-  ]
+    blogPost: published.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      url: `https://flowrightplumbing.com/blog/${post.slug}`,
+      datePublished: post.publishAt,
+      author: { '@type': 'Person', name: post.author },
+      description: post.excerpt,
+    })),
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#003b5d] to-[#003b5d]/90 text-white py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 font-serif text-balance">
-              Plumbing Tips & Expert Advice
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Navbar />
+      <main>
+        {/* Page header */}
+        <section className="bg-brand-navy py-16 md:py-20" aria-labelledby="blog-heading">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <nav aria-label="Breadcrumb" className="mb-4">
+              <ol className="flex items-center gap-2 text-sm text-white/50">
+                <li>
+                  <Link href="/" className="hover:text-white transition-colors">
+                    Home
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li className="text-white/80">Blog</li>
+              </ol>
+            </nav>
+            <h1
+              id="blog-heading"
+              className="font-heading text-4xl sm:text-5xl font-bold text-white text-balance"
+            >
+              {data.collection?.title ?? 'Plumbing Tips & Advice'}
             </h1>
-            <p className="text-xl text-white/90 leading-relaxed">
-              Stay informed with the latest plumbing tips, maintenance advice, and industry insights from the experts at Reliant Plumbing.
+            <p className="mt-4 text-lg text-white/70 max-w-xl text-pretty">
+              Expert guidance from our licensed plumbers — covering maintenance, repairs, and
+              everything in between.
             </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Blog Posts Grid */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {posts.map((post, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow group">
-                <div className="aspect-video relative overflow-hidden">
-                  <Image
-                    src={post.image || "/placeholder.svg"}
-                    alt={post.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-[#f3bc48] text-[#003b5d] px-3 py-1 rounded-full text-xs font-semibold">
-                      {post.category}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
+          {published.length === 0 && (
+            <p className="text-muted-foreground text-center py-20">
+              No posts published yet. Check back soon.
+            </p>
+          )}
+
+          {/* Featured post — fully clickable card */}
+          {featured && (
+            <Link
+              href={`/blog/${featured.slug}`}
+              className="group block mb-14 rounded-2xl border border-border overflow-hidden bg-card hover:shadow-lg transition-shadow cursor-pointer"
+              aria-label={`Read ${featured.title}`}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 items-stretch">
+                <div className="aspect-video lg:aspect-auto lg:h-full overflow-hidden bg-brand-light">
+                  {featured.heroImageUrl ? (
+                    <img
+                      src={featured.heroImageUrl}
+                      alt={featured.title}
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                      width={600}
+                      height={360}
+                    />
+                  ) : (
+                    <img
+                      src="/placeholder.svg?height=360&width=600"
+                      alt={featured.title}
+                      className="w-full h-full object-cover"
+                      width={600}
+                      height={360}
+                    />
+                  )}
+                </div>
+                <div className="p-6 sm:p-8 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    {featured.categories?.[0] && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/15 text-accent border border-accent/20">
+                        {featured.categories[0]}
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground">Featured</span>
+                  </div>
+                  <h2 className="font-heading text-2xl sm:text-3xl font-bold text-primary text-balance group-hover:text-accent transition-colors">
+                    {featured.title}
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed text-pretty line-clamp-3">
+                    {featured.excerpt}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-auto">
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {featured.author}
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <time dateTime={featured.publishAt}>{formatDate(featured.publishAt)}</time>
+                    <span aria-hidden="true">·</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {featured.readingTimeMinutes} min read
                     </span>
                   </div>
                 </div>
-                <CardHeader>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                    <Calendar className="h-4 w-4" />
-                    <span>{post.date}</span>
-                  </div>
-                  <h2 className="text-2xl font-bold mb-3 font-serif group-hover:text-[#f3bc48] transition-colors">
-                    {post.title}
-                  </h2>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
-                    {post.excerpt}
-                  </p>
-                  <Link href={post.link}>
-                    <Button variant="link" className="text-[#f3bc48] hover:text-[#f3bc48]/80 p-0 font-semibold">
-                      Read More
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+              </div>
+            </Link>
+          )}
 
-      {/* CTA Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 font-serif">
-              Have a Plumbing Question?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              {'Can\'t find the answer you\'re looking for? Our expert team is ready to help with any plumbing concern.'}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-[#f3bc48] hover:bg-[#f3bc48]/90 text-[#003b5d] font-semibold">
-                Contact Us Today
-              </Button>
-              <Button size="lg" variant="outline">
-                Browse All Services
-              </Button>
+          {/* Category pills */}
+          {allCategories.length > 0 && (
+            <div
+              className="flex items-center gap-2 flex-wrap mb-8"
+              role="navigation"
+              aria-label="Blog categories"
+            >
+              <span className="text-xs font-semibold text-muted-foreground mr-1">Categories:</span>
+              {allCategories.map((cat) => (
+                <span
+                  key={cat}
+                  className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border"
+                >
+                  <Tag className="w-2.5 h-2.5" />
+                  {cat}
+                </span>
+              ))}
             </div>
-          </div>
-        </div>
-      </section>
+          )}
 
+          {/* Post grid — each card fully clickable */}
+          {rest.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {rest.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  aria-label={`Read ${post.title}`}
+                >
+                  <div className="aspect-video overflow-hidden bg-brand-light">
+                    {post.heroImageUrl ? (
+                      <img
+                        src={post.heroImageUrl}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                        width={400}
+                        height={200}
+                      />
+                    ) : (
+                      <img
+                        src="/placeholder.svg?height=200&width=400"
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                        width={400}
+                        height={200}
+                      />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-3 p-5 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {post.categories?.[0] && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
+                          {post.categories[0]}
+                        </span>
+                      )}
+                    </div>
+                    <h2 className="font-heading font-semibold text-base text-foreground text-balance group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 flex-1">
+                      {post.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto pt-3 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <span>{post.author}</span>
+                        <span aria-hidden="true">·</span>
+                        <time dateTime={post.publishAt}>{formatDate(post.publishAt)}</time>
+                      </div>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {post.readingTimeMinutes} min
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
       <Footer />
-      <Chatbot />
-    </div>
+    </>
   )
 }
